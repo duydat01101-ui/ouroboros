@@ -139,6 +139,10 @@ class OuroborosAgent:
 
     def _check_uncommitted_changes(self) -> Tuple[dict, int]:
         """Check for uncommitted changes and attempt auto-rescue commit & push."""
+        import os
+        # Skip git operations in local mode
+        if os.environ.get("OUROBOROS_LOCAL_MODE") == "true":
+            return {"status": "ok", "note": "local mode — git ops skipped"}, 0
         import re
         import subprocess
         # Remove stale index.lock (race condition when multiple workers start)

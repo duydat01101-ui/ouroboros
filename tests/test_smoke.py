@@ -117,6 +117,7 @@ EXPECTED_TOOLS = [
     "enable_tools",
     "analyze_tasks", # Added for Evolution #9
     "get_task_metrics", # Added for Evolution #9
+    "quoroom_api_get", "quoroom_api_post", "quoroom_create_worker", "quoroom_list_goals", "quoroom_list_rooms", "quoroom_room_status", "quoroom_send_usdc", "quoroom_set_goal", "quoroom_wallet"
 ]
 
 

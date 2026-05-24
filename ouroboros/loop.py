@@ -548,7 +548,7 @@ def _setup_dynamic_tools(tools_registry, tool_schemas, messages):
     except Exception:
         pass
 
-    # Inject ToolRegistry into self_improve_tool
+        # Inject ToolRegistry into self_improve_tool
     try:
         from ouroboros.tools.self_improve_tool import _set_registry as _set_imp_registry
         _set_imp_registry(tools_registry)

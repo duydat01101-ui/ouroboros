@@ -138,6 +138,8 @@ EXPECTED_TOOLS = [
     # Tool synthesis (CodeAct)
     "create_tool", "tool_factory", "list_synthesized",
     # Self-improvement (Voyager)
+    # Metacognition (self-evaluation + uncertainty)
+    "self_evaluate", "detect_uncertainty", "refine_response",
     "self_analyze", "self_improve", "skill_learn", "skill_search",
     # Bounty hunting
     "bounty_search", "bounty_info", "bounty_submit",

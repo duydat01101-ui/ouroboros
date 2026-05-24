@@ -63,17 +63,14 @@ def _analyze_tasks(ctx: ToolContext, days: int = 7) -> str:
         if not tasks:
             return f"No tasks found in last {days} days"
         
-        result = [f"Task Analytics (last {days} days)
-"]
-        result.append(f"Total task types: {len(tasks)}
-")
+        result = [f"Task Analytics (last {days} days)"]
+        result.append(f"Total task types: {len(tasks)}")
         
         for task_type in sorted(tasks.keys()):
             stats = tasks[task_type]
-            result.append(f"  {task_type}: {stats["count"]} tasks, ${stats["total_cost"]:.2f} cost")
+            result.append(f"  {task_type}: {stats['count']} tasks, ${stats['total_cost']:.2f} cost")
         
-        return "
-".join(result)
+        return "\n".join(result)
     
     except Exception as e:
         log.warning("Failed to analyze tasks", exc_info=True)
@@ -107,12 +104,11 @@ def _get_task_metrics(ctx: ToolContext) -> str:
                     continue
         
         result = [
-            f"Total tasks: {metrics["total_tasks"]}",
-            f"Total cost: ${metrics["total_cost"]:.2f}",
-            f"Task types: {dict(metrics["task_types"])}",
+            f"Total tasks: {metrics['total_tasks']}",
+            f"Total cost: ${metrics['total_cost']:.2f}",
+            f"Task types: {dict(metrics['task_types'])}",
         ]
-        return "
-".join(result)
+        return "\n".join(result)
     
     except Exception as e:
         log.warning("Failed to get task metrics", exc_info=True)

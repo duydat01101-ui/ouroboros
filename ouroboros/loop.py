@@ -548,6 +548,13 @@ def _setup_dynamic_tools(tools_registry, tool_schemas, messages):
     except Exception:
         pass
 
+    # Inject ToolRegistry into self_improve_tool
+    try:
+        from ouroboros.tools.self_improve_tool import _set_registry as _set_imp_registry
+        _set_imp_registry(tools_registry)
+    except Exception:
+        pass
+
     non_core_count = len(tools_registry.list_non_core_tools())
     if non_core_count > 0:
         messages.append({

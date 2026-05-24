@@ -335,6 +335,26 @@ class Memory:
             log.warning("search_archives failed", exc_info=True)
             return "(error searching archived memory)"
 
+    # ── Skill Library ────────────────────────────────────
+
+    def skill_learn(self, name: str, category: str, pattern: str,
+                    example: str = "", tags: list = None,
+                    source: str = "") -> str:
+        """Save a reusable skill/pattern to the skill library."""
+        from ouroboros.self_improve import SkillLibrary
+        return SkillLibrary(self.drive_root).learn(
+            name, category, pattern, example, tags, source)
+
+    def skill_search(self, query: str, max_results: int = 10) -> str:
+        """Search the skill library."""
+        from ouroboros.self_improve import SkillLibrary
+        return SkillLibrary(self.drive_root).search(query, max_results)
+
+    def skill_list(self) -> str:
+        """List recent skills."""
+        from ouroboros.self_improve import SkillLibrary
+        return SkillLibrary(self.drive_root).list_recent()
+
     # --- Defaults ---
 
     def _default_scratchpad(self) -> str:

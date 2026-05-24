@@ -137,6 +137,8 @@ EXPECTED_TOOLS = [
     "plan_task",
     # Tool synthesis (CodeAct)
     "create_tool", "tool_factory", "list_synthesized",
+    # Self-improvement (Voyager)
+    "self_analyze", "self_improve", "skill_learn", "skill_search",
     # Bounty hunting
     "bounty_search", "bounty_info", "bounty_submit",
 ]

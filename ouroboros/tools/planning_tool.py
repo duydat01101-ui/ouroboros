@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Any, Dict, List
 
 from ouroboros.tools.registry import ToolEntry, ToolContext
@@ -51,9 +52,10 @@ def _execute_node(graph: PlanGraph, node: PlanNode, ctx: ToolContext) -> str:
 
             try:
                 client = LLMClient()
+                model = os.environ.get("OUROBOROS_MODEL_LIGHT") or os.environ.get("DEFAULT_LIGHT_MODEL", "openai/gpt-4o-mini")
                 resp_msg, _usage = client.chat(
                     messages=[{"role": "user", "content": plan_ctx}],
-                    model=None,
+                    model=model,
                     reasoning_effort="low",
                     max_tokens=1024,
                 )

@@ -51,6 +51,29 @@ def _release_git_lock(lock_path: pathlib.Path) -> None:
         pass
 
 
+# --- Prompt integrity check ---
+
+PROMPT_FILES = {
+    "BIBLE.md": ["Goal", "Constraints"],
+    "prompts/SYSTEM.md": ["I Am Ouroboros", "Be Decisive", "Constraints", "Tools", "Evolution Mode"],
+    "prompts/CONSCIOUSNESS.md": ["background consciousness", "Drive to Improve", "Quality Gate"],
+}
+
+def _check_prompt_integrity(ctx: ToolContext) -> Optional[str]:
+    """Check that prompt files are not corrupted/truncated. Returns error string or None."""
+    for rel_path, required_sections in PROMPT_FILES.items():
+        full_path = pathlib.Path(ctx.repo_dir) / rel_path
+        if not full_path.exists():
+            return f"⚠️ PROMPT_INTEGRITY: {rel_path} missing!"
+        content = full_path.read_text()
+        for section in required_sections:
+            if section.lower() not in content.lower():
+                return f"⚠️ PROMPT_INTEGRITY: {rel_path} missing section '{section}'"
+        # Check minimum size — healthy prompts are >2KB
+        if rel_path != "BIBLE.md" and len(content) < 2000:
+            return f"⚠️ PROMPT_INTEGRITY: {rel_path} too short ({len(content)}B), may be truncated"
+    return None
+
 # --- Pre-push test gate ---
 
 MAX_TEST_OUTPUT = 8000
@@ -99,6 +122,11 @@ def _run_pre_push_tests(ctx: ToolContext) -> Optional[str]:
 
 def _git_push_with_tests(ctx: ToolContext) -> Optional[str]:
     """Run pre-push tests, then pull --rebase and push. Returns None on success, error string on failure."""
+    integrity_error = _check_prompt_integrity(ctx)
+    if integrity_error:
+        log.error("Prompt integrity check failed, blocking push")
+        ctx.last_push_succeeded = False
+        return f"⚠️ PROMPT_INTEGRITY_FAILED: Push blocked.\n{integrity_error}\nProtected prompt files must not be modified."
     test_error = _run_pre_push_tests(ctx)
     if test_error:
         log.error("Pre-push tests failed, blocking push")

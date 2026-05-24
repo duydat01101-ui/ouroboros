@@ -130,11 +130,15 @@ def _build_memory_sections(memory: Memory) -> List[str]:
 
 
 def _build_recent_sections(memory: Memory, env: Any, task_id: str = "") -> List[str]:
-    """Build recent chat, recent progress, recent tools, recent events sections."""
+    """Build recent chat, recent progress, recent tools, recent events sections.
+    
+    Uses working memory (last 30 messages) + optional archived recall.
+    """
     sections = []
 
-    chat_summary = memory.summarize_chat(
-        memory.read_jsonl_tail("chat.jsonl", 200))
+    chat_entries = memory.read_jsonl_tail("chat.jsonl", 200)
+    working_mem = chat_entries[-30:] if len(chat_entries) > 30 else chat_entries
+    chat_summary = memory.summarize_chat(working_mem)
     if chat_summary:
         sections.append("## Recent chat\n\n" + chat_summary)
 
@@ -331,6 +335,18 @@ def build_llm_messages(
     # --- Load memory ---
     memory.ensure_files()
 
+    # Auto-archive if chat history exceeds threshold
+    chat_path = memory.logs_path("chat.jsonl")
+    if chat_path.exists():
+        try:
+            line_count = len(chat_path.read_text(encoding="utf-8").strip().split("\n"))
+            if line_count > 60:
+                archived = memory.archive_chat(keep_recent=30)
+                if archived:
+                    log.info("Auto-archived %d old chat entries", archived)
+        except Exception:
+            pass
+
     # --- Assemble messages with 3-block prompt caching ---
     # Block 1: Static content (SYSTEM.md + BIBLE.md + README) — cached
     # Block 2: Semi-stable content (identity + scratchpad + knowledge) — cached
@@ -371,6 +387,15 @@ def build_llm_messages(
         dynamic_parts.append(health_section)
 
     dynamic_parts.extend(_build_recent_sections(memory, env, task_id=task.get("id", "")))
+
+    # Archived recall: auto-inject if archives exist and task has context
+    archive_index = env.drive_path("memory/archives/_index.md")
+    if archive_index.exists():
+        task_text = str(task.get("text", ""))
+        if task_text.strip() and len(task_text) > 10:
+            recall = memory.search_archives(task_text[:100], max_results=3)
+            if not recall.startswith("(no") and not recall.startswith("(error"):
+                dynamic_parts.append(recall)
 
     if str(task.get("type") or "") == "review" and review_context_builder is not None:
         try:

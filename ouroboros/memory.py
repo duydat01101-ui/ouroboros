@@ -244,6 +244,97 @@ class Memory:
     def append_journal(self, entry: Dict[str, Any]) -> None:
         append_jsonl(self.journal_path(), entry)
 
+    # ── Archival Memory ──────────────────────────────────
+
+    WORKING_MEMORY_COUNT = 30
+    ARCHIVE_DIR = "memory/archives"
+
+    def _archive_path(self) -> pathlib.Path:
+        return (self.drive_root / self.ARCHIVE_DIR).resolve()
+
+    def _archive_index_path(self) -> pathlib.Path:
+        return self._archive_path() / "_index.md"
+
+    def archive_chat(self, keep_recent: int = WORKING_MEMORY_COUNT) -> int:
+        """Compress old chat entries into archived summaries. Returns count archived."""
+        chat_path = self.logs_path("chat.jsonl")
+        if not chat_path.exists():
+            return 0
+        try:
+            raw_lines = chat_path.read_text(encoding="utf-8").strip().split("\n")
+            if len(raw_lines) <= keep_recent + 10:
+                return 0
+            entries = []
+            for line in raw_lines:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entries.append(json.loads(line))
+                except Exception:
+                    continue
+            if len(entries) <= keep_recent:
+                return 0
+            old_entries = entries[:-keep_recent]
+            batches = []
+            batch_size = 10
+            for i in range(0, len(old_entries), batch_size):
+                batch = old_entries[i:i + batch_size]
+                lines = []
+                for e in batch:
+                    d = str(e.get("direction", "")).lower()
+                    arrow = "→" if d in ("out", "outgoing") else "←"
+                    ts = str(e.get("ts", ""))[:16]
+                    text = str(e.get("text", ""))[:200]
+                    lines.append(f"{arrow} [{ts}] {text}")
+                summary = "\n".join(lines)
+                ts_start = str(batch[0].get("ts", ""))[:10]
+                ts_end = str(batch[-1].get("ts", ""))[:10]
+                batches.append((ts_start, ts_end, summary))
+            self._archive_path().mkdir(parents=True, exist_ok=True)
+            index_lines = []
+            if self._archive_index_path().exists():
+                index_lines = self._archive_index_path().read_text(encoding="utf-8").split("\n")
+            for ts_start, ts_end, summary in batches:
+                fname = f"chat_{ts_start}_{ts_end}.md"
+                fpath = self._archive_path() / fname
+                if not fpath.exists():
+                    write_text(fpath, f"# Chat Archive: {ts_start} → {ts_end}\n\n{summary}")
+                    index_lines.insert(0, f"- [{ts_start} → {ts_end}]({fname})")
+            write_text(self._archive_index_path(), "\n".join(index_lines))
+            new_lines = [json.dumps(e, ensure_ascii=False) for e in entries[-keep_recent:]]
+            chat_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+            return len(old_entries)
+        except Exception:
+            log.warning("archive_chat failed", exc_info=True)
+            return 0
+
+    def search_archives(self, query: str, max_results: int = 5) -> str:
+        """Search archived chat summaries. Returns matching snippets."""
+        archive_dir = self._archive_path()
+        if not archive_dir.exists():
+            return "(no archived memory)"
+        try:
+            results = []
+            q = query.lower()
+            for f in sorted(archive_dir.iterdir(), reverse=True):
+                if f.suffix != ".md" or f.name == "_index.md":
+                    continue
+                text = f.read_text(encoding="utf-8")
+                if q in text.lower():
+                    lines = text.split("\n")
+                    title = lines[0] if lines else f.name
+                    snippet = "\n".join(l for l in lines[:8] if l.strip())
+                    results.append(f"**{title}**\n{snippet}")
+                    if len(results) >= max_results:
+                        break
+            if not results:
+                return f"(no archived memory matching '{query}')"
+            return f"## Archived Memory (query: {query})\n\n" + "\n\n---\n\n".join(results)
+        except Exception:
+            log.warning("search_archives failed", exc_info=True)
+            return "(error searching archived memory)"
+
     # --- Defaults ---
 
     def _default_scratchpad(self) -> str:

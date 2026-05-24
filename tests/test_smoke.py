@@ -131,6 +131,8 @@ EXPECTED_TOOLS = [
     # Purple Flea (bootstrap income)
     "pf_register", "pf_balance", "pf_coinflip",
     "pf_martingale", "pf_create_agent", "pf_status",
+    # Memory compression (archival + recall)
+    "memory_compress", "memory_search",
     # Bounty hunting
     "bounty_search", "bounty_info", "bounty_submit",
 ]

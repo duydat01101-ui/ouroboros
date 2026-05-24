@@ -539,6 +539,15 @@ def _setup_dynamic_tools(tools_registry, tool_schemas, messages):
     except Exception:
         pass
 
+    # Inject ToolRegistry + tools_dir into tool_synthesis for live tool creation
+    try:
+        from ouroboros.tools.tool_synthesis import _set_registry as _set_syn_registry
+        from ouroboros.tools.tool_synthesis import _set_tools_dir as _set_syn_dir
+        _set_syn_registry(tools_registry)
+        _set_syn_dir(tools_registry._ctx.repo_dir / "ouroboros" / "tools")
+    except Exception:
+        pass
+
     non_core_count = len(tools_registry.list_non_core_tools())
     if non_core_count > 0:
         messages.append({

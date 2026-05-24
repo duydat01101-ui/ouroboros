@@ -135,6 +135,8 @@ EXPECTED_TOOLS = [
     "memory_compress", "memory_search",
     # Planning (Graph of Thoughts)
     "plan_task",
+    # Tool synthesis (CodeAct)
+    "create_tool", "tool_factory", "list_synthesized",
     # Bounty hunting
     "bounty_search", "bounty_info", "bounty_submit",
 ]

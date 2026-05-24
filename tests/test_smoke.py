@@ -2,7 +2,7 @@
 
 Tests core invariants:
 - All modules import cleanly
-- Tool registry discovers all 33 tools
+- Tool registry discovers expected tools
 - Utility functions work correctly
 - Memory operations don't crash
 - Context builder produces valid structure
@@ -85,6 +85,7 @@ def test_tool_set_matches(registry):
 
 
 EXPECTED_TOOLS = [
+    # Core tools
     "repo_read", "repo_list", "repo_commit_push",
     "drive_read", "drive_write", "drive_list",
     "git_status", "git_diff",
@@ -115,6 +116,23 @@ EXPECTED_TOOLS = [
     "compact_context",
     "list_available_tools",
     "enable_tools",
+    # Dev tools
+    "sandbox_exec", "sandbox_test_file",
+    "pkg_install", "pkg_check",
+    "auto_debug", "sys_health",
+    "generate_tests", "run_tests", "run_ci",
+    "lint_code",
+    # Quoroom (agent swarm)
+    "quoroom_api_get", "quoroom_api_post",
+    "quoroom_create_worker",
+    "quoroom_list_goals", "quoroom_list_rooms",
+    "quoroom_room_status", "quoroom_send_usdc",
+    "quoroom_set_goal", "quoroom_wallet",
+    # Purple Flea (bootstrap income)
+    "pf_register", "pf_balance", "pf_coinflip",
+    "pf_martingale", "pf_create_agent", "pf_status",
+    # Bounty hunting
+    "bounty_search", "bounty_info", "bounty_submit",
 ]
 
 

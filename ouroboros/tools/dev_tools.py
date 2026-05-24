@@ -350,7 +350,7 @@ def get_tools() -> list[ToolEntry]:
         ToolEntry("sandbox_exec", {
             "name": "sandbox_exec",
             "description": "Run code safely in isolated temp dir. Supports python/node/shell. 30s timeout. Use for testing code before deploying.",
-            "input_schema": {
+            "parameters": {
                 "type": "object",
                 "properties": {
                     "code": {"type": "string", "description": "Code to execute"},
@@ -363,7 +363,7 @@ def get_tools() -> list[ToolEntry]:
         ToolEntry("sandbox_test_file", {
             "name": "sandbox_test_file",
             "description": "Copy a repo file to sandbox and run its tests in isolation. Safe for testing before deploy.",
-            "input_schema": {
+            "parameters": {
                 "type": "object",
                 "properties": {
                     "relative_path": {"type": "string", "description": "Path relative to repo root, e.g. ouroboros/tools/git.py"},
@@ -375,7 +375,7 @@ def get_tools() -> list[ToolEntry]:
         ToolEntry("pkg_install", {
             "name": "pkg_install",
             "description": "Install Python (pip) or Node (npm) packages. Detects requirements.txt or package.json automatically.",
-            "input_schema": {
+            "parameters": {
                 "type": "object",
                 "properties": {
                     "packages": {"type": "string", "description": "Space-separated package names (optional, reads requirements.txt if empty)"},
@@ -387,7 +387,7 @@ def get_tools() -> list[ToolEntry]:
         ToolEntry("pkg_check", {
             "name": "pkg_check",
             "description": "Check installed vs required packages. Reports missing dependencies.",
-            "input_schema": {
+            "parameters": {
                 "type": "object",
                 "properties": {}
             }
@@ -396,7 +396,7 @@ def get_tools() -> list[ToolEntry]:
         ToolEntry("auto_debug", {
             "name": "auto_debug",
             "description": "Capture error context for debugging. Pass error text and optional file path. Agent will analyze and fix.",
-            "input_schema": {
+            "parameters": {
                 "type": "object",
                 "properties": {
                     "error_text": {"type": "string", "description": "Error message or stack trace"},
@@ -409,7 +409,7 @@ def get_tools() -> list[ToolEntry]:
         ToolEntry("sys_health", {
             "name": "sys_health",
             "description": "Report system health: disk usage, memory, top processes.",
-            "input_schema": {
+            "parameters": {
                 "type": "object",
                 "properties": {}
             }
@@ -418,7 +418,7 @@ def get_tools() -> list[ToolEntry]:
         ToolEntry("generate_tests", {
             "name": "generate_tests",
             "description": "Generate test file for a given source file. Provides prompt for claude_code_edit to write tests.",
-            "input_schema": {
+            "parameters": {
                 "type": "object",
                 "properties": {
                     "file_path": {"type": "string", "description": "Path to source file relative to repo root"},
@@ -430,7 +430,7 @@ def get_tools() -> list[ToolEntry]:
         ToolEntry("run_tests", {
             "name": "run_tests",
             "description": "Run pytest on given path. Returns results.",
-            "input_schema": {
+            "parameters": {
                 "type": "object",
                 "properties": {
                     "path": {"type": "string", "description": "Test path (default tests/)"},
@@ -441,7 +441,7 @@ def get_tools() -> list[ToolEntry]:
         ToolEntry("run_ci", {
             "name": "run_ci",
             "description": "Run CI pipeline: lint → typecheck → test. Stages: comma-separated or all (default). Returns each stage result.",
-            "input_schema": {
+            "parameters": {
                 "type": "object",
                 "properties": {
                     "stages": {"type": "string", "description": "Comma-separated stages: lint,typecheck,test,build (optional, default all)"},
@@ -452,7 +452,7 @@ def get_tools() -> list[ToolEntry]:
         ToolEntry("lint_code", {
             "name": "lint_code",
             "description": "Run ruff linter on given path.",
-            "input_schema": {
+            "parameters": {
                 "type": "object",
                 "properties": {
                     "path": {"type": "string", "description": "Path to lint (default ouroboros/)"},

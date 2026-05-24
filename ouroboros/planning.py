@@ -157,10 +157,10 @@ Respond ONLY with valid JSON:
 
     client = llm_client or LLMClient()
     try:
-        model = os.environ.get("OUROBOROS_MODEL_LIGHT") or os.environ.get("DEFAULT_LIGHT_MODEL", "openai/gpt-4o-mini")
+        model_name = os.environ.get("OUROBOROS_MODEL_LIGHT") or os.environ.get("DEFAULT_LIGHT_MODEL", "openai/gpt-4o-mini")
         resp_msg, _usage = client.chat(
             messages=[{"role": "user", "content": prompt}],
-            model=None,
+            model=model_name,
             reasoning_effort="low",
             max_tokens=2048,
         )

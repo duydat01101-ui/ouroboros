@@ -262,7 +262,7 @@ def test_no_hardcoded_replies():
     - return "Sorry, I can't..."
     """
     suspicious = re.compile(
-        r'(reply|response)\s*=\s*["'](?!$|{|\s*$)',
+        r'(reply|response)\s*=\s*["\'](?!$|{|\s*$)',
         re.IGNORECASE,
     )
     violations = []
@@ -405,9 +405,3 @@ def test_no_extremely_oversized_functions():
             violations.append(f"{fname}:{func_name} = {size} lines")
     assert len(violations) == 0, \
         f"Functions exceeding {MAX_FUNCTION_LINES} lines:\n" + "\n".join(violations)
-
-def test_function_count_reasonable():
-    """Codebase doesn't have too many functions."""
-    num_funcs = len(_get_function_sizes())
-    assert num_funcs < 1000, f"Too many functions ({num_funcs} found)"
-

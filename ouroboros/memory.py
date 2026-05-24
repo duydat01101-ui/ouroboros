@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import pathlib
+from ouroboros.error_journal import ErrorJournal
 from collections import Counter
 from typing import Any, Dict, List, Optional
 
@@ -24,6 +25,7 @@ class Memory:
     def __init__(self, drive_root: pathlib.Path, repo_dir: Optional[pathlib.Path] = None):
         self.drive_root = drive_root
         self.repo_dir = repo_dir
+        self.error_journal = ErrorJournal(drive_root)
 
     # --- Paths ---
 
@@ -240,6 +242,9 @@ class Memory:
                 sha = short(str(e.get("sha") or e.get("git_sha") or ""), 12)
                 return f"{e['type']}: {e.get('ts', '')} branch={branch} sha={sha}"
         return ""
+
+    def summarize_errors(self) -> str:
+        return self.error_journal.summarize_for_context()
 
     def append_journal(self, entry: Dict[str, Any]) -> None:
         append_jsonl(self.journal_path(), entry)

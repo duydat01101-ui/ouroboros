@@ -126,6 +126,10 @@ def _build_memory_sections(memory: Memory) -> List[str]:
         if evo_text.strip():
             sections.append("## Evolution Log (recent)\n\n" + clip_text(evo_text, 10000))
 
+    error_summary = memory.summarize_errors()
+    if error_summary.strip():
+        sections.append("## Error Journal\n\n" + error_summary)
+
     return sections
 
 

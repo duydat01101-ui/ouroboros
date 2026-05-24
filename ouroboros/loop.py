@@ -532,6 +532,13 @@ def _setup_dynamic_tools(tools_registry, tool_schemas, messages):
     tools_registry.override_handler("list_available_tools", _handle_list_tools)
     tools_registry.override_handler("enable_tools", _handle_enable_tools)
 
+    # Inject ToolRegistry into planning_tool so plan_task can execute sub-tools
+    try:
+        from ouroboros.tools.planning_tool import _set_registry as _set_plan_registry
+        _set_plan_registry(tools_registry)
+    except Exception:
+        pass
+
     non_core_count = len(tools_registry.list_non_core_tools())
     if non_core_count > 0:
         messages.append({

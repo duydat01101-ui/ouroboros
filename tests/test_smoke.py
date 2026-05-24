@@ -133,6 +133,8 @@ EXPECTED_TOOLS = [
     "pf_martingale", "pf_create_agent", "pf_status",
     # Memory compression (archival + recall)
     "memory_compress", "memory_search",
+    # Planning (Graph of Thoughts)
+    "plan_task",
     # Bounty hunting
     "bounty_search", "bounty_info", "bounty_submit",
 ]

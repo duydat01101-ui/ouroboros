@@ -16,6 +16,12 @@ log = logging.getLogger(__name__)
 
 DEFAULT_LIGHT_MODEL = "google/gemini-3-pro-preview"
 
+# Allow overriding the OpenRouter base URL via env var (e.g., for 9Router proxy)
+_OPENROUTER_BASE_URL = os.environ.get(
+    "OPENROUTER_BASE_URL",
+    "https://openrouter.ai/api/v1",
+)
+
 
 def normalize_reasoning_effort(value: str, default: str = "medium") -> str:
     allowed = {"none", "minimal", "low", "medium", "high", "xhigh"}
@@ -48,8 +54,10 @@ def fetch_openrouter_pricing() -> Dict[str, Tuple[float, float, float]]:
         return {}
 
     try:
-        url = "https://openrouter.ai/api/v1/models"
-        resp = requests.get(url, timeout=15)
+        api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+        url = f"{_OPENROUTER_BASE_URL.rstrip('/')}/models"
+        headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+        resp = requests.get(url, headers=headers, timeout=15)
         resp.raise_for_status()
 
         data = resp.json()
@@ -103,10 +111,10 @@ class LLMClient:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        base_url: str = "https://openrouter.ai/api/v1",
+        base_url: Optional[str] = None,
     ):
         self._api_key = api_key or os.environ.get("OPENROUTER_API_KEY", "")
-        self._base_url = base_url
+        self._base_url = base_url or _OPENROUTER_BASE_URL
         self._client = None
 
     def _get_client(self):

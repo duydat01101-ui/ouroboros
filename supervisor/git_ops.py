@@ -314,8 +314,15 @@ def checkout_and_reset(branch: str, reason: str = "unspecified",
         subprocess.run(["git", "push", "-u", "origin", branch],
                         cwd=str(REPO_DIR), check=True)
     else:
-        subprocess.run(["git", "checkout", branch, "--"], cwd=str(REPO_DIR), check=True)
-        subprocess.run(["git", "reset", "--hard", f"origin/{branch}"], cwd=str(REPO_DIR), check=True)
+        if os.environ.get("OUROBOROS_LOCAL_MODE", "").lower() in ("true", "1", "yes"):
+            log.info("OUROBOROS_LOCAL_MODE=true — skipping git checkout/reset to preserve local files")
+            branch_sha = subprocess.run(
+                ["git", "rev-parse", "HEAD"], cwd=str(REPO_DIR),
+                capture_output=True, text=True,
+            ).stdout.strip()
+        else:
+            subprocess.run(["git", "checkout", branch, "--"], cwd=str(REPO_DIR), check=True)
+            subprocess.run(["git", "reset", "--hard", f"origin/{branch}"], cwd=str(REPO_DIR), check=True)
     # Clean __pycache__ to prevent stale bytecode (git checkout may not update mtime)
     for p in REPO_DIR.rglob("__pycache__"):
         shutil.rmtree(p, ignore_errors=True)

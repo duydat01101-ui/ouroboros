@@ -261,8 +261,9 @@ def check_openrouter_ground_truth() -> Optional[Dict[str, float]]:
         api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
         if not api_key:
             return None
+        base_url = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").rstrip("/")
         req = urllib.request.Request(
-            "https://openrouter.ai/api/v1/auth/key",
+            f"{base_url}/auth/key",
             headers={"Authorization": f"Bearer {api_key}"},
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
@@ -282,6 +283,12 @@ def check_openrouter_ground_truth() -> Optional[Dict[str, float]]:
         if limit_remaining is not None:
             result["limit_remaining"] = float(limit_remaining)
         return result
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            log.debug("OpenRouter ground truth not available via proxy (HTTP 404)")
+        else:
+            log.warning("Failed to fetch OpenRouter ground truth: HTTP %s", e.code)
+        return None
     except Exception:
         log.warning("Failed to fetch OpenRouter ground truth", exc_info=True)
         return None

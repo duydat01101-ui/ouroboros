@@ -200,7 +200,8 @@ def handle_tool_factory(
 
     # Compile and create handler
     try:
-        local_ns: Dict[str, Any] = {}
+        import json as _json_mod
+        local_ns: Dict[str, Any] = {"json": _json_mod, "logging": logging}
         exec(compile(ast.parse(handler_src), f"<{name}>", "exec"), local_ns)
         handler = local_ns.get(f"handle_{name}")
         if handler is None:

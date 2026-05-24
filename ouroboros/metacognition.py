@@ -11,6 +11,7 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple
 import re
+from ouroboros.llm import LLMClient
 
 
 log = logging.getLogger(__name__)
@@ -53,7 +54,6 @@ def evaluate_response(
         '"knowledge_gaps": ["things I do not know that are relevant"]}'
     )
 
-    from ouroboros.llm import LLMClient
 
     client = llm_client or LLMClient()
     try:

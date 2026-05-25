@@ -11,6 +11,7 @@ import json
 import logging
 import pathlib
 from ouroboros.error_journal import ErrorJournal
+from ouroboros.semantic_memory import SemanticMemory
 from collections import Counter
 from typing import Any, Dict, List, Optional
 
@@ -26,6 +27,7 @@ class Memory:
         self.drive_root = drive_root
         self.repo_dir = repo_dir
         self.error_journal = ErrorJournal(drive_root)
+        self.semantic = SemanticMemory(drive_root / "memory" / "semantic.db")
 
     # --- Paths ---
 

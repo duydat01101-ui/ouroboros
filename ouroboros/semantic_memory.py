@@ -71,7 +71,7 @@ class SemanticMemory:
         """
         # Match capitalized words, numbers, and common patterns
         patterns = [
-            r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b",  # Multi-word proper nouns
+            r"\b([A-Z][a-z]+)\b",  # Individual capitalized words
             r"\b(\d{4}-\d{2}-\d{2})\b",  # ISO dates
             r"\b(\d+)\b",  # Numbers
         ]

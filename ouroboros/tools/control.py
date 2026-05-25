@@ -97,6 +97,7 @@ def _update_scratchpad(ctx: ToolContext, content: str) -> str:
         "content_preview": content[:500],
         "content_len": len(content),
     })
+    mem.semantic.add(content, metadata={"type": "scratchpad_update", "ts": utc_now_iso()})
     return f"OK: scratchpad updated ({len(content)} chars)"
 
 
@@ -131,9 +132,12 @@ def _send_owner_message(ctx: ToolContext, text: str, reason: str = "") -> str:
 
 def _update_identity(ctx: ToolContext, content: str) -> str:
     """Update identity manifest (who you are, who you want to become)."""
-    path = ctx.drive_root / "memory" / "identity.md"
-    path.parent.mkdir(parents=True, exist_ok=True)
+    from ouroboros.memory import Memory
+    mem = Memory(drive_root=ctx.drive_root)
+    mem.ensure_files()
+    path = mem.identity_path()
     path.write_text(content, encoding="utf-8")
+    mem.semantic.add(content, metadata={"type": "identity_update", "ts": utc_now_iso()})
     return f"OK: identity updated ({len(content)} chars)"
 
 

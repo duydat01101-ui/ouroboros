@@ -261,6 +261,24 @@ def _knowledge_list(ctx: ToolContext) -> str:
 
 # --- Tool registration ---
 
+
+def _semantic_search(ctx: ToolContext, query: str, limit: int = 5) -> str:
+    """Search through semantic memory (scratchpad, identity, user context, events)."""
+    from ouroboros.memory import Memory
+    mem = Memory(drive_root=ctx.drive_root)
+    results = mem.semantic.search(query, limit=limit)
+    if not results:
+        return f"No semantic memories found for: {query}"
+    
+    out = [f"Semantic search results for '{query}':\n"]
+    for r in results:
+        meta = r.get("metadata", {})
+        ts = meta.get("ts", "unknown")
+        mtype = meta.get("type", "unknown")
+        out.append(f"[{ts}] [{mtype}] (score: {r['score']:.2f})\n{r['content']}\n---")
+    return "\n".join(out)
+
+
 def get_tools() -> List[ToolEntry]:
     return [
         ToolEntry("knowledge_read", {
@@ -309,4 +327,16 @@ def get_tools() -> List[ToolEntry]:
                 "required": []
             },
         }, _knowledge_list),
+        ToolEntry("semantic_search", {
+            "name": "semantic_search",
+            "description": "Search through semantic memory (scratchpad history, identity history, user context history).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query"},
+                    "limit": {"type": "integer", "description": "Max results", "default": 5}
+                },
+                "required": ["query"]
+            },
+        }, _semantic_search),
     ]

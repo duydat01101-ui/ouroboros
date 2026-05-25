@@ -13,6 +13,30 @@ import pathlib
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
+from collections import OrderedDict
+import json
+
+class LRUCache:
+    def __init__(self, capacity: int = 50):
+        self.cache: OrderedDict[str, str] = OrderedDict()
+        self.capacity = capacity
+        self.hits = 0
+        self.misses = 0
+
+    def get(self, key: str) -> Optional[str]:
+        if key not in self.cache:
+            self.misses += 1
+            return None
+        self.cache.move_to_end(key)
+        self.hits += 1
+        return self.cache[key]
+
+    def put(self, key: str, value: str) -> None:
+        self.cache[key] = value
+        self.cache.move_to_end(key)
+        if len(self.cache) > self.capacity:
+            self.cache.popitem(last=False)
+
 from ouroboros.utils import safe_relpath
 
 
@@ -102,6 +126,9 @@ class ToolRegistry:
     def __init__(self, repo_dir: pathlib.Path, drive_root: pathlib.Path):
         self._entries: Dict[str, ToolEntry] = {}
         self._ctx = ToolContext(repo_dir=repo_dir, drive_root=drive_root)
+        self._cache = LRUCache(capacity=100)
+        self._cacheable_tools = {"repo_read", "repo_list", "drive_read", "drive_list", "knowledge_read"}
+        self._write_tools = {"repo_commit_push", "drive_write", "knowledge_write", "run_shell", "claude_code_edit"}
         self._load_modules()
 
     def _load_modules(self) -> None:
@@ -169,8 +196,25 @@ class ToolRegistry:
         entry = self._entries.get(name)
         if entry is None:
             return f"⚠️ Unknown tool: {name}. Available: {', '.join(sorted(self._entries.keys()))}"
+            
+        if name in self._write_tools:
+            self._cache.cache.clear()
+            
+        is_cacheable = name in self._cacheable_tools
+        cache_key = ""
+        
+        if is_cacheable:
+            args_str = json.dumps(args, sort_keys=True)
+            cache_key = f"{name}:{args_str}"
+            cached_val = self._cache.get(cache_key)
+            if cached_val is not None:
+                return cached_val
+                
         try:
-            return entry.handler(self._ctx, **args)
+            result = entry.handler(self._ctx, **args)
+            if is_cacheable and isinstance(result, str) and not result.startswith("⚠️"):
+                self._cache.put(cache_key, result)
+            return result
         except TypeError as e:
             return f"⚠️ TOOL_ARG_ERROR ({name}): {e}"
         except Exception as e:

@@ -1,8 +1,10 @@
 """
-Ouroboros — LLM client.
+Ouroboros — LLM client with router.
 
 The only module that communicates with the LLM API (OpenRouter).
 Contract: chat(), default_model(), available_models(), add_usage().
+
+Now with automatic failover and multi-provider support via router.
 """
 
 from __future__ import annotations
@@ -11,6 +13,8 @@ import logging
 import os
 import time
 from typing import Any, Dict, List, Optional, Tuple
+
+from ouroboros.router import get_failover_router, FailoverRouter
 
 log = logging.getLogger(__name__)
 
@@ -22,12 +26,10 @@ _OPENROUTER_BASE_URL = os.environ.get(
     "https://openrouter.ai/api/v1",
 )
 
-
 def normalize_reasoning_effort(value: str, default: str = "medium") -> str:
     allowed = {"none", "minimal", "low", "medium", "high", "xhigh"}
     v = str(value or "").strip().lower()
     return v if v in allowed else default
-
 
 def add_usage(total: Dict[str, Any], usage: Dict[str, Any]) -> None:
     """Accumulate usage from one LLM call into a running total."""
@@ -35,7 +37,6 @@ def add_usage(total: Dict[str, Any], usage: Dict[str, Any]) -> None:
         total[k] = int(total.get(k) or 0) + int(usage.get(k) or 0)
     if usage.get("cost"):
         total["cost"] = float(total.get("cost") or 0) + float(usage["cost"])
-
 
 def fetch_openrouter_pricing() -> Dict[str, Tuple[float, float, float]]:
     """
@@ -104,18 +105,23 @@ def fetch_openrouter_pricing() -> Dict[str, Tuple[float, float, float]]:
         log.warning(f"Failed to fetch OpenRouter pricing: {e}")
         return {}
 
-
 class LLMClient:
-    """OpenRouter API wrapper. All LLM calls go through this class."""
+    """OpenRouter API wrapper with automatic failover. All LLM calls go through this class."""
 
     def __init__(
         self,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
+        use_router: bool = True,
     ):
         self._api_key = api_key or os.environ.get("OPENROUTER_API_KEY", "")
         self._base_url = base_url or _OPENROUTER_BASE_URL
         self._client = None
+        self._use_router = use_router
+        self._router: Optional[FailoverRouter] = None
+        
+        if use_router:
+            self._router = get_failover_router()
 
     def _get_client(self):
         if self._client is None:
@@ -228,6 +234,14 @@ class LLMClient:
                 if cost is not None:
                     usage["cost"] = cost
 
+        # Record call in router if enabled
+        if self._router:
+            provider_name = "openrouter"  # Default provider
+            key_index = 0  # Default key
+            tokens = usage.get("total_tokens", 0)
+            cost = usage.get("cost", 0.0)
+            self._router.record_call(provider_name, key_index, tokens, cost)
+
         return msg, usage
 
     def vision_query(
@@ -296,3 +310,9 @@ class LLMClient:
         if light and light != main and light != code:
             models.append(light)
         return models
+
+    def get_router_stats(self) -> Dict[str, Any]:
+        """Get router statistics (for debugging/monitoring)."""
+        if not self._router:
+            return {}
+        return self._router.get_stats()
